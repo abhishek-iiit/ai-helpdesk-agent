@@ -90,7 +90,8 @@ nano .env
 
 ```env
 # Required
-OPENAI_API_KEY=sk-your-openai-key-here
+GOOGLE_API_KEY=AIza...   # https://aistudio.google.com/app/apikey
+GEMINI_MODEL=gemini-2.0-flash
 
 # Optional: LangSmith (developer tracing)
 LANGCHAIN_TRACING_V2=true
@@ -159,6 +160,9 @@ def create_support_ticket(issue: str, user_email: str) -> str:
 **Prompt Templates:**
 ```python
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.1)
 
 intent_prompt = ChatPromptTemplate.from_messages([
     ("system", "Classify the IT helpdesk query into: knowledge_base, service_status, create_ticket, escalate, general"),
@@ -241,7 +245,7 @@ Run: "Helpdesk: My VPN is not working"
     └── Tokens: 312 input, 89 output | Latency: 1.2s
 ```
 
-**Total latency:** 2.1s | **Total tokens:** 694 | **Cost:** ~$0.0002
+**Total latency:** 2.1s | **Total tokens:** 694
 
 > 💡 **LangSmith = Developer tool** for debugging and prompt iteration
 
@@ -333,7 +337,7 @@ curl -X POST http://localhost:8000/chat \
 | LangGraph | ≥0.2.0 | Stateful workflow engine |
 | LangSmith | ≥0.1.0 | Developer debugging |
 | LangFuse | ≥2.0.0 | Production analytics |
-| OpenAI | ≥1.0.0 | LLM provider (GPT-4o-mini) |
+| Google Gemini | ≥0.8.0 | LLM provider (gemini-2.0-flash) |
 | FastAPI | ≥0.104.0 | REST API |
 | Rich | ≥13.7.0 | Terminal UI |
 
