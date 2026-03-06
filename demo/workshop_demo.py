@@ -21,6 +21,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.rule import Rule
 from rich.columns import Columns
+from rich.console import Group
 from rich.text import Text
 from rich import box
 
@@ -194,8 +195,13 @@ def print_teaches(scenario: dict, actual_intent: str, latency_ms: int, ticket_id
 
     console.print(
         Panel(
-            f"[bold white]📊 Results:[/bold white]\n{results_table}\n\n"
-            f"[bold white]📚 What this demonstrates:[/bold white]\n{teaches_text}",
+            Group(
+                Text("📊 Results:", style="bold white"),
+                results_table,
+                Text(""),
+                Text("📚 What this demonstrates:", style="bold white"),
+                Text.from_markup(teaches_text),
+            ),
             title=f"[bold]Scenario {scenario['id']} Complete[/bold]",
             border_style="green",
         )
