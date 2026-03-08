@@ -114,6 +114,10 @@ class HelpdeskAgent:
                 "user_email": user_email,
                 "session_id": self.session_id,
                 "question": question,
+                # LangFuse v3: user/session/tags are injected via metadata keys
+                "langfuse_user_id": user_email,
+                "langfuse_session_id": self.session_id,
+                "langfuse_tags": ["it-helpdesk", "workshop", settings.APP_ENV],
             },
         }
 

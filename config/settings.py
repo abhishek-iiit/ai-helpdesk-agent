@@ -70,6 +70,16 @@ class Settings:
             os.environ["LANGCHAIN_PROJECT"] = self.LANGCHAIN_PROJECT
             os.environ["LANGCHAIN_ENDPOINT"] = self.LANGCHAIN_ENDPOINT
 
+    def apply_langfuse_env(self):
+        """
+        Apply LangFuse environment variables so the v3 CallbackHandler
+        can authenticate without explicit constructor arguments.
+        """
+        if self.langfuse_enabled:
+            os.environ["LANGFUSE_PUBLIC_KEY"] = self.LANGFUSE_PUBLIC_KEY
+            os.environ["LANGFUSE_SECRET_KEY"] = self.LANGFUSE_SECRET_KEY
+            os.environ["LANGFUSE_HOST"] = self.LANGFUSE_HOST
+
     def status_report(self) -> dict:
         """Return a dict showing which integrations are active."""
         return {
@@ -84,5 +94,6 @@ class Settings:
 # Global singleton — import this everywhere
 settings = Settings()
 
-# Apply LangSmith environment on import (auto-enables tracing)
+# Apply observability environment on import (auto-enables tracing)
 settings.apply_langsmith_env()
+settings.apply_langfuse_env()

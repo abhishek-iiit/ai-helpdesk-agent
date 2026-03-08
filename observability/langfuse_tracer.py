@@ -49,10 +49,10 @@ Workshop Note:
 import uuid
 from config.settings import settings
 
-# LangFuse may not be compatible with all Python versions (e.g., 3.14+).
-# We import lazily inside functions to allow graceful degradation.
+# LangFuse v3+ uses langfuse.langchain.CallbackHandler (not langfuse.callback).
+# We probe the correct import path so older v2 installs also degrade gracefully.
 try:
-    import langfuse as _langfuse_module  # noqa: F401
+    from langfuse.langchain import CallbackHandler as _LangfuseCallbackHandler  # noqa: F401
     _LANGFUSE_AVAILABLE = True
 except Exception:
     _LANGFUSE_AVAILABLE = False
@@ -87,20 +87,18 @@ def get_langfuse_callbacks(
         return [], None
 
     try:
-        from langfuse.callback import CallbackHandler
+        from langfuse.langchain import CallbackHandler
 
-        trace_id = run_id or str(uuid.uuid4())
+        # LangFuse v3 requires trace IDs as 32 lowercase hex chars (UUID without hyphens).
+        raw_id = run_id or str(uuid.uuid4())
+        trace_id = raw_id.replace("-", "")
 
+        # v3 API: keys/host are read from env vars automatically.
+        # trace_context pins the trace ID so the run appears under a
+        # predictable ID in the LangFuse dashboard.
         handler = CallbackHandler(
-            public_key=settings.LANGFUSE_PUBLIC_KEY,
-            secret_key=settings.LANGFUSE_SECRET_KEY,
-            host=settings.LANGFUSE_HOST,
-            # Metadata for analytics
-            trace_id=trace_id,
-            user_id=user_id,
-            session_id=session_id or str(uuid.uuid4()),
-            # Tags for filtering in LangFuse dashboard
-            tags=["it-helpdesk", "workshop", settings.APP_ENV],
+            trace_context={"trace_id": trace_id},
+            update_trace=True,
         )
 
         return [handler], trace_id
@@ -128,13 +126,8 @@ def flush_langfuse():
         return
 
     try:
-        from langfuse import Langfuse
-        lf = Langfuse(
-            public_key=settings.LANGFUSE_PUBLIC_KEY,
-            secret_key=settings.LANGFUSE_SECRET_KEY,
-            host=settings.LANGFUSE_HOST,
-        )
-        lf.flush()
+        from langfuse import get_client
+        get_client().flush()
     except Exception:
         pass  # Non-critical — don't let flush errors break the app
 
@@ -151,7 +144,9 @@ def get_langfuse_trace_url(trace_id: str) -> str | None:
     """
     if not settings.langfuse_enabled or not trace_id:
         return None
-    return f"{settings.LANGFUSE_HOST}/trace/{trace_id}"
+    # Ensure trace_id is in 32-hex format for the URL (strip hyphens if present)
+    hex_trace_id = trace_id.replace("-", "")
+    return f"{settings.LANGFUSE_HOST}/trace/{hex_trace_id}"
 
 
 def print_langfuse_status():
